@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Training Mode</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: white;
+            color: black;
+            transition: background-color 0.7s ease;
+
+            //maybe I can change the pulse here
+        }
+        #score {
+            position: fixed;  /* Ensures it stays in place */
+            top: 20px;        /* Adjusted for better placement */
+            right: 20px;      /* Adjusted for better placement */
+            font-size: 1.5rem;
+            z-index: 10;      /* Ensures it overlays other content */
+        }
+        #question {
+            font-size: 6rem;
+            margin-bottom: 2rem;
+        }
+        #answer {
+            font-size: 2rem;
+            width: 150px;
+            text-align: center;
+            border: none;
+            border-bottom: 2px solid #333;
+            outline: none;
+        }
+    </style>
+</head>
+<body>
+<div id="score">Scoreboard: <span id="correct">0</span></div>
+<div id="question"></div>
+<input type="text" id="answer" autofocus autocomplete="off">
+
+<script>
+    let currentAnswer;
+
+    function getQuestion() {
+       fetch('/get_question?mode=training')
+           .then(response => response.json())
+           .then(data => {
+               document.getElementById('question').textContent = data.question + ' =';
+               currentAnswer = data.answer;
+           });
+    }
+
+    function checkAnswer() {
+       const userAnswer = document.getElementById('answer').value.trim();
+
+       if (userAnswer === '') return;
+
+       fetch('/check_answer', {
+           method: 'POST',
+           headers: {
+               'Content-Type': 'application/json',
+           },
+           body: JSON.stringify({
+               user_answer: userAnswer,
+               correct_answer: currentAnswer,
+           }),
+       })
+       .then(response => response.json())
+       .then(data => {
+           if (data.is_correct) {
+               document.getElementById('correct').textContent = data.correct_answers;
+               document.getElementById('answer').value = '';
+
+              // Flash the screen soft green
+              document.body.style.backgroundColor = '#d4edda';
+              setTimeout(() => {
+                  document.body.style.backgroundColor = 'white';
+              }, 1000);
+
+
+
+              getQuestion();
+          }
+      });
+    }
+
+    document.getElementById('answer').addEventListener('input', checkAnswer);
+
+    getQuestion();
+</script>
+
+</body>
+</html>

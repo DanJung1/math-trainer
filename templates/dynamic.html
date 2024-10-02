@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Mode</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: white;
+            color: black;
+        }
+        #timer {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+        }
+        #score {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+        #question {
+            font-size: 6rem;
+            margin-bottom: 2rem;
+        }
+        #answer {
+            font-size: 2rem;
+            width: 150px;
+            text-align: center;
+            border: none;
+            border-bottom: 2px solid #333;
+            outline: none;
+        }
+        #retry, #main-menu {
+            font-size: 1.5rem;
+            padding: 10px 20px;
+            margin-top: 20px;
+            border-radius: 5px;
+            border: none;
+            background-color: #3498db;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            display: none; /* Hidden initially */
+        }
+        #retry:hover, #main-menu:hover {
+            background-color: #2980b9;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+<div id="timer">Seconds left: 60</div>
+<div id="score">Score: <span id="correct">0</span></div>
+<div id="question"></div>
+<input type="text" id="answer" autofocus autocomplete="off">
+<button id="retry" onclick="startNewRound()">Retry</button>
+<button id="main-menu" onclick="location.href='/'">Main Menu</button>
+
+<script>
+    let currentAnswer, timerInterval, score = 0;
+
+    function getQuestion() {
+        fetch('/get_question?mode=dynamic')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('question').textContent = data.question + ' =';
+                currentAnswer = data.answer.toString();
+            });
+    }
+
+    function checkAnswer() {
+        const userAnswer = document.getElementById('answer').value.trim();
+
+        if (userAnswer === currentAnswer) {
+            score++;
+            document.getElementById('correct').textContent = score;
+            document.getElementById('answer').value = '';
+
+           getQuestion();
+       }
+    }
+
+    function startTimer(duration) {
+       let timer = duration;
+
+       timerInterval = setInterval(() => {
+           document.getElementById('timer').textContent = `Seconds left: ${timer}`;
+           if (--timer < 0) {
+               endGame();
+           }
+       }, 1000);
+    }
+
+    function endGame() {
+       clearInterval(timerInterval);
+       document.getElementById('answer').disabled = true;
+       document.getElementById('question').textContent = 'Time\'s up!';
+       document.getElementById('retry').style.display = 'block';
+       document.getElementById('main-menu').style.display = 'block';
+    }
+
+    function startNewRound() {
+       clearInterval(timerInterval);
+       score = 0;
+       document.getElementById('correct').textContent = score;
+       document.getElementById('answer').disabled = false;
+       document.getElementById('retry').style.display = 'none';
+       document.getElementById('main-menu').style.display = 'none';
+       getQuestion();
+       startTimer(60);
+    }
+
+    document.getElementById('answer').addEventListener('input', checkAnswer);
+
+    getQuestion();
+    startTimer(60);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marathon Mode</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: white;
+            color: black;
+        }
+        #timer-bar-container {
+            width: 80%;
+            height: 20px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        #timer-bar {
+            height: 100%;
+            background-color: #76c7c0;
+            border-radius: 10px;
+        }
+        #score {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+        #question {
+            font-size: 6rem;
+            margin-bottom: 2rem;
+        }
+        #answer {
+            font-size: 2rem;
+            width: 150px;
+            text-align: center;
+            border: none;
+            border-bottom: 2px solid #333;
+            outline: none;
+        }
+    </style>
+</head>
+<body>
+<div id="timer-bar-container">
+    <div id="timer-bar"></div>
+</div>
+<div id="score">Score: <span id="correct">0</span></div>
+<div id="question"></div>
+<input type="text" id="answer" autofocus autocomplete="off">
+
+<script>
+    let currentAnswer, score = 0, timerInterval, timeLimit = 10000; // Start with 10 seconds
+
+    function getQuestion() {
+        fetch('/get_question?mode=marathon')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('question').textContent = data.question + ' =';
+                currentAnswer = data.answer;
+            });
+    }
+
+    function checkAnswer() {
+        const userAnswer = document.getElementById('answer').value.trim();
+
+        if (userAnswer === '') return;
+
+        fetch('/check_answer', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                user_answer: userAnswer,
+                correct_answer: currentAnswer,
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.is_correct) {
+                score++;
+                document.getElementById('correct').textContent = score;
+                document.getElementById('answer').value = '';
+
+               // Gradually decrease the time limit
+               timeLimit = Math.max(300, timeLimit - 200); // Decrease by 0.2 seconds each correct answer
+               startTimer();
+               getQuestion();
+           } else {
+               endGame();
+           }
+       });
+    }
+
+    function startTimer() {
+       clearInterval(timerInterval);
+       let startTime = Date.now();
+
+       timerInterval = setInterval(() => {
+           const elapsedTime = Date.now() - startTime;
+           const remainingTime = timeLimit - elapsedTime;
+
+           if (remainingTime <= 0) {
+               endGame();
+           } else {
+               const widthPercentage = (remainingTime / timeLimit) * 100;
+               document.getElementById('timer-bar').style.width = widthPercentage + '%';
+           }
+       }, 30);
+    }
+
+    function endGame() {
+       clearInterval(timerInterval);
+       document.getElementById('answer').disabled = true;
+       document.getElementById('question').textContent = 'Game Over!';
+    }
+
+    document.getElementById('answer').addEventListener('input', checkAnswer);
+
+    getQuestion();
+    startTimer();
+</script>
+
+</body>
+</html>
