@@ -18,7 +18,7 @@ class QuestionGenerator:
                 b = random.randint(1, a)
             elif operation == '*':
                 a, b = random.randint(2, 12), random.randint(2, 12)
-            else:  # division
+            else:
                 b = random.randint(2, 12)
                 a = b * random.randint(1, 12)
 
@@ -29,6 +29,30 @@ class QuestionGenerator:
 
             if len(self.used_questions) > 100:
                 self.used_questions.clear()
+
+class AdaptiveQuestionGenerator:
+    def __init__(self):
+        self.history = {'+': [], '-': [], '*': [], '/': []}
+
+    def generate_question(self):
+        # Determine the operation the user struggles with the most
+        operation = min(self.history, key=lambda op: sum(self.history[op][-10:]))
+
+        if operation == '+':
+            a, b = random.randint(10, 99), random.randint(10, 99)
+        elif operation == '-':
+            a = random.randint(10, 99)
+            b = random.randint(1, a)
+        elif operation == '*':
+            a, b = random.randint(2, 12), random.randint(2, 12)
+        else:  # division
+            b = random.randint(2, 12)
+            a = b * random.randint(1, 12)
+
+        return f'{a} {operation} {b}', eval(f'{a} {operation} {b}')
+
+    def update_history(self, operation, correct):
+        self.history[operation].append(correct)
 
 class MentalMathTrainer:
     def __init__(self):

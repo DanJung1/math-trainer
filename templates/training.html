@@ -15,16 +15,29 @@
             margin: 0;
             background-color: white;
             color: black;
-            transition: background-color 0.7s ease;
-
-            //maybe I can change the pulse here
+            transition: background-color 1s ease;
+        }
+        #progress-bar-container {
+            width: 50%;
+            height: 20px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            margin-bottom: 40px; /* Adjusted for more space */
+            position: absolute;
+            top: 150px; /* Move up on the screen - I'm going to edit this from 20px - also going to change width from 80 to 50 */
+        }
+        #progress-bar {
+            height: 100%;
+            background-color: #76c7c0;
+            border-radius: 10px;
+            transition: width 0.3s ease; /* Smooth transition - going to make this faster from 0.5 */
         }
         #score {
-            position: fixed;  /* Ensures it stays in place */
-            top: 20px;        /* Adjusted for better placement */
-            right: 20px;      /* Adjusted for better placement */
-            font-size: 1.5rem;
-            z-index: 10;      /* Ensures it overlays other content */
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 0rem;
+            /* I'm going to get rid of score for now */
         }
         #question {
             font-size: 6rem;
@@ -38,62 +51,90 @@
             border-bottom: 2px solid #333;
             outline: none;
         }
+        #next-round, #main-menu {
+            font-size: 1.5rem;
+            padding: 10px 20px;
+            margin-top: 20px;
+            border-radius: 5px;
+            border: none;
+            background-color: #3498db;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+        #next-round:hover, #main-menu:hover {
+            background-color: #2980b9;
+            transform: scale(1.05);
+        }
     </style>
 </head>
 <body>
-<div id="score">Scoreboard: <span id="correct">0</span></div>
+<div id="progress-bar-container">
+    <div id="progress-bar" style="width:0%"></div>
+</div>
+<div id="score">Score: <span id="correct">0</span></div>
 <div id="question"></div>
 <input type="text" id="answer" autofocus autocomplete="off">
+<button id="next-round" onclick="startNewRound()" style="display:none;">Next Round</button>
+<button id="main-menu" onclick="location.href='/'" style="display:none;">Main Menu</button>
 
 <script>
-    let currentAnswer;
+    let currentAnswer, score = 0, totalQuestions = 10;
 
     function getQuestion() {
-       fetch('/get_question?mode=training')
-           .then(response => response.json())
-           .then(data => {
-               document.getElementById('question').textContent = data.question + ' =';
-               currentAnswer = data.answer;
-           });
+        fetch('/get_question')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('question').textContent = data.question + ' =';
+                currentAnswer = data.answer.toString();
+            });
     }
 
     function checkAnswer() {
-       const userAnswer = document.getElementById('answer').value.trim();
+        const userAnswer = document.getElementById('answer').value.trim();
 
-       if (userAnswer === '') return;
+        if (userAnswer === currentAnswer) {
+            score++;
+            document.getElementById('correct').textContent = score;
+            document.getElementById('answer').value = '';
 
-       fetch('/check_answer', {
-           method: 'POST',
-           headers: {
-               'Content-Type': 'application/json',
-           },
-           body: JSON.stringify({
-               user_answer: userAnswer,
-               correct_answer: currentAnswer,
-           }),
-       })
-       .then(response => response.json())
-       .then(data => {
-           if (data.is_correct) {
-               document.getElementById('correct').textContent = data.correct_answers;
-               document.getElementById('answer').value = '';
+           // Update progress bar
+           const progressPercentage = (score / totalQuestions) * 100;
+           document.getElementById('progress-bar').style.width = progressPercentage + '%';
 
-              // Flash the screen soft green
-              document.body.style.backgroundColor = '#d4edda';
-              setTimeout(() => {
-                  document.body.style.backgroundColor = 'white';
-              }, 1000);
+           if (score < totalQuestions) {
+               getQuestion();
+           } else {
+               endRound();
+           }
 
+           // Green glow effect
+           document.body.style.backgroundColor = '#d4edda';
+           setTimeout(() => {
+               document.body.style.backgroundColor = 'white';
+           }, 500);
+       }
+    }
 
+    function endRound() {
+       document.getElementById('answer').style.display = 'none';
+       document.getElementById('next-round').style.display = 'block';
+       document.getElementById('main-menu').style.display = 'block';
+    }
 
-              getQuestion();
-          }
-      });
+    function startNewRound() {
+       score = 0;
+       document.getElementById('correct').textContent = score;
+       document.getElementById('answer').style.display = 'inline';
+       document.getElementById('next-round').style.display = 'none';
+       document.getElementById('main-menu').style.display = 'none';
+       document.getElementById('progress-bar').style.width = '0%';
+       getQuestion();
     }
 
     document.getElementById('answer').addEventListener('input', checkAnswer);
 
-    getQuestion();
+    startNewRound();
 </script>
 
 </body>
