@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Trainer - Analytics</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        .progress-card {
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .chart-container {
+            height: 300px;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">Math Trainer</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/analytics">Analytics</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/learning-path">Learning Path</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h2 class="mb-4">Your Progress Analytics</h2>
+        
+        <!-- Progress Cards -->
+        <div class="row">
+            {% for op in progress %}
+            <div class="col-md-3">
+                <div class="card progress-card">
+                    <div class="card-body">
+                        <h5 class="card-title">Operation: {{ op.operation }}</h5>
+                        <div class="progress mb-3">
+                            <div class="progress-bar" role="progressbar" 
+                                 style="width: {{ op.accuracy }}%"
+                                 aria-valuenow="{{ op.accuracy }}" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100">
+                                {{ "%.1f"|format(op.accuracy) }}%
+                            </div>
+                        </div>
+                        <p class="card-text">
+                            Correct: {{ op.correct_answers }}<br>
+                            Total: {{ op.total_attempts }}<br>
+                            Level: {{ op.difficulty_level }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Charts -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Daily Progress</h5>
+                        <div id="dailyProgressChart" class="chart-container"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Response Time</h5>
+                        <div id="responseTimeChart" class="chart-container"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Prepare data for charts
+        const analyticsData = {{ analytics|tojson|safe }};
+        
+        // Daily Progress Chart
+        const dates = analyticsData.map(a => a.session_date);
+        const accuracy = analyticsData.map(a => a.accuracy);
+        const questions = analyticsData.map(a => a.questions_attempted);
+        
+        const dailyProgressTrace = {
+            x: dates,
+            y: accuracy,
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: 'Accuracy'
+        };
+        
+        const questionsTrace = {
+            x: dates,
+            y: questions,
+            type: 'bar',
+            name: 'Questions Attempted',
+            yaxis: 'y2'
+        };
+        
+        const dailyProgressLayout = {
+            title: 'Daily Progress',
+            yaxis: {title: 'Accuracy (%)'},
+            yaxis2: {
+                title: 'Questions Attempted',
+                overlaying: 'y',
+                side: 'right'
+            }
+        };
+        
+        Plotly.newPlot('dailyProgressChart', [dailyProgressTrace, questionsTrace], dailyProgressLayout);
+        
+        // Response Time Chart
+        const responseTimeTrace = {
+            x: dates,
+            y: analyticsData.map(a => a.average_response_time),
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: 'Average Response Time'
+        };
+        
+        const responseTimeLayout = {
+            title: 'Response Time Trend',
+            yaxis: {title: 'Time (seconds)'}
+        };
+        
+        Plotly.newPlot('responseTimeChart', [responseTimeTrace], responseTimeLayout);
+    </script>
+</body>
+</html> 

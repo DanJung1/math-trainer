@@ -3,139 +3,200 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Training Mode</title>
+    <title>Math Trainer - Training Mode</title>
     <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background: #fff;
+            color: #111;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
         body {
-            font-family: Arial, sans-serif;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
+        }
+        .top-bar {
+            width: 100vw;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: absolute;
+            top: 0;
+            left: 0;
+            padding: 32px 48px 0 48px;
+            box-sizing: border-box;
+            font-size: 1.5rem;
+            font-weight: 300;
+            color: #888;
+            letter-spacing: 1px;
+        }
+        .center-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100vw;
             height: 100vh;
-            margin: 0;
-            background-color: white;
-            color: black;
-            transition: background-color 1s ease;
         }
-        #progress-bar-container {
-            width: 50%;
-            height: 20px;
-            background-color: #e0e0e0;
-            border-radius: 10px;
-            margin-bottom: 40px; /* Adjusted for more space */
-            position: absolute;
-            top: 150px; /* Move up on the screen - I'm going to edit this from 20px - also going to change width from 80 to 50 */
+        .question-row {
+            background: none;
+            padding: 32px 0;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 120px;
         }
-        #progress-bar {
-            height: 100%;
-            background-color: #76c7c0;
-            border-radius: 10px;
-            transition: width 0.3s ease; /* Smooth transition - going to make this faster from 0.5 */
-        }
-        #score {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            font-size: 0rem;
-            /* I'm going to get rid of score for now */
-        }
-        #question {
-            font-size: 6rem;
-            margin-bottom: 2rem;
+        .question {
+            font-size: 3.5rem;
+            font-weight: 400;
+            letter-spacing: 2px;
+            margin-right: 24px;
+            color: #222;
+            transition: color 0.2s;
         }
         #answer {
-            font-size: 2rem;
-            width: 150px;
-            text-align: center;
+            font-size: 2.5rem;
+            width: 180px;
+            padding: 8px 16px 8px 16px;
             border: none;
-            border-bottom: 2px solid #333;
+            border-bottom: 3px solid #1976d2;
+            border-radius: 0;
             outline: none;
+            text-align: center;
+            background: transparent;
+            transition: border-color 0.2s, background 0.2s;
+            box-shadow: none;
         }
-        #next-round, #main-menu {
+        #answer:focus {
+            border-color: #43a5fa;
+            background: #f5faff;
+        }
+        #answer::-webkit-outer-spin-button,
+        #answer::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        #answer[type=number] {
+            -moz-appearance: textfield;
+        }
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 2.5rem;
+            margin-top: 2.5rem;
+            font-size: 1.2rem;
+            color: #555;
+        }
+        .stats-bar span {
             font-size: 1.5rem;
-            padding: 10px 20px;
-            margin-top: 20px;
-            border-radius: 5px;
-            border: none;
-            background-color: #3498db;
-            color: white;
-            cursor: pointer;
-            transition: background-color 0.3s ease, transform 0.3s ease;
+            color: #1976d2;
+            font-weight: 500;
+            margin-left: 0.5rem;
         }
-        #next-round:hover, #main-menu:hover {
-            background-color: #2980b9;
-            transform: scale(1.05);
+        @media (max-width: 600px) {
+            .top-bar { padding: 16px 12px 0 12px; font-size: 1.1rem; }
+            .question-row { padding: 18px 0; margin-top: 70px; }
+            .question { font-size: 2rem; }
+            #answer { font-size: 1.5rem; width: 90px; }
+            .stats-bar { gap: 1rem; font-size: 1rem; }
+            .stats-bar span { font-size: 1.1rem; }
         }
     </style>
 </head>
 <body>
-<div id="progress-bar-container">
-    <div id="progress-bar" style="width:0%"></div>
-</div>
-<div id="score">Score: <span id="correct">0</span></div>
-<div id="question"></div>
-<input type="text" id="answer" autofocus autocomplete="off">
-<button id="next-round" onclick="startNewRound()" style="display:none;">Next Round</button>
-<button id="main-menu" onclick="location.href='/'" style="display:none;">Main Menu</button>
+    <div class="top-bar">
+        <a href="/" style="text-decoration:none;color:inherit;display:flex;align-items:center;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none" viewBox="0 0 24 24"><path fill="#888" d="M3 11.5V21h6v-5h6v5h6v-9.5l-9-7-9 7Z"/></svg>
+        </a>
+        <div></div>
+        <div>Training</div>
+    </div>
+    <div class="center-area">
+        <div class="question-row">
+            <span class="question" id="question">Loading...</span>
+            <input type="number" id="answer" autocomplete="off" placeholder="" autofocus>
+        </div>
+        <div class="stats-bar">
+            <div>Correct <span id="score">0</span></div>
+            <div>Avg Time <span id="avg-time">0s</span></div>
+        </div>
+    </div>
+    <script>
+        let startTime;
+        let currentAnswer;
+        let questionStartTime;
+        let totalQuestions = 0;
+        let totalTime = 0;
+        const operation = '{{ operation }}';
+        let answerLocked = false;
 
-<script>
-    let currentAnswer, score = 0, totalQuestions = 10;
+        function getNewQuestion() {
+            fetch('/get_question?mode=training&operation=' + operation)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('question').textContent = data.question + ' =';
+                    currentAnswer = data.answer;
+                    questionStartTime = Date.now();
+                    document.getElementById('answer').value = '';
+                    answerLocked = false;
+                    setTimeout(() => document.getElementById('answer').focus(), 10);
+                });
+        }
 
-    function getQuestion() {
-        fetch('/get_question')
+        function updateStats(data, responseTime) {
+            document.getElementById('score').textContent = data.correct_answers;
+            totalQuestions++;
+            totalTime += responseTime;
+            const avgTime = (totalTime / totalQuestions).toFixed(1);
+            document.getElementById('avg-time').textContent = avgTime + 's';
+        }
+
+        function checkAnswer() {
+            if (answerLocked) return;
+            const userAnswer = document.getElementById('answer').value;
+            if (userAnswer === '' || isNaN(userAnswer)) return;
+            if (parseInt(userAnswer) !== currentAnswer) return;
+            answerLocked = true;
+            const responseTime = (Date.now() - questionStartTime) / 1000;
+            fetch('/check_answer', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    user_answer: parseInt(userAnswer),
+                    correct_answer: currentAnswer,
+                    operation: operation,
+                    response_time: responseTime
+                }),
+            })
             .then(response => response.json())
             .then(data => {
-                document.getElementById('question').textContent = data.question + ' =';
-                currentAnswer = data.answer.toString();
+                updateStats(data, responseTime);
+                getNewQuestion();
             });
-    }
+        }
 
-    function checkAnswer() {
-        const userAnswer = document.getElementById('answer').value.trim();
+        document.getElementById('answer').addEventListener('input', function(e) {
+            checkAnswer();
+        });
 
-        if (userAnswer === currentAnswer) {
-            score++;
-            document.getElementById('correct').textContent = score;
-            document.getElementById('answer').value = '';
+        function updateTimer() {
+            const seconds = Math.floor((Date.now() - startTime) / 1000);
+            document.getElementById('timer').textContent = `Time: ${seconds}s`;
+        }
 
-           // Update progress bar
-           const progressPercentage = (score / totalQuestions) * 100;
-           document.getElementById('progress-bar').style.width = progressPercentage + '%';
-
-           if (score < totalQuestions) {
-               getQuestion();
-           } else {
-               endRound();
-           }
-
-           // Green glow effect
-           document.body.style.backgroundColor = '#d4edda';
-           setTimeout(() => {
-               document.body.style.backgroundColor = 'white';
-           }, 500);
-       }
-    }
-
-    function endRound() {
-       document.getElementById('answer').style.display = 'none';
-       document.getElementById('next-round').style.display = 'block';
-       document.getElementById('main-menu').style.display = 'block';
-    }
-
-    function startNewRound() {
-       score = 0;
-       document.getElementById('correct').textContent = score;
-       document.getElementById('answer').style.display = 'inline';
-       document.getElementById('next-round').style.display = 'none';
-       document.getElementById('main-menu').style.display = 'none';
-       document.getElementById('progress-bar').style.width = '0%';
-       getQuestion();
-    }
-
-    document.getElementById('answer').addEventListener('input', checkAnswer);
-
-    startNewRound();
-</script>
-
+        // Start the game
+        startTime = Date.now();
+        getNewQuestion();
+        setInterval(updateTimer, 1000);
+    </script>
 </body>
 </html>

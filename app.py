@@ -1,7 +1,15 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, session
 import random
+from datetime import datetime, timedelta
+from models import db, User, Progress, Analytics, LearningPath
+import json
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'your-secret-key-here'  # Change this in production
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///math_trainer.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db.init_app(app)
 
 class QuestionGenerator:
     def __init__(self):
@@ -58,11 +66,78 @@ class MentalMathTrainer:
     def __init__(self):
         self.correct_answers = 0
         self.generator = QuestionGenerator()
+        self.session_start_time = datetime.now()
+        self.response_times = []
 
-    def check_answer(self, user_answer, correct_answer):
+    def check_answer(self, user_answer, correct_answer, operation, response_time):
         is_correct = user_answer == correct_answer
         if is_correct:
             self.correct_answers += 1
+        
+        # Update progress in database
+        if 'user_id' in session:
+            progress = Progress.query.filter_by(
+                user_id=session['user_id'],
+                operation=operation
+            ).first()
+            
+            if not progress:
+                progress = Progress(
+                    user_id=session['user_id'],
+                    operation=operation,
+                    difficulty_level=1,
+                    total_attempts=0,
+                    correct_answers=0
+                )
+                db.session.add(progress)
+            
+            if progress.total_attempts is None:
+                progress.total_attempts = 0
+            if progress.correct_answers is None:
+                progress.correct_answers = 0
+            
+            progress.total_attempts += 1
+            if is_correct:
+                progress.correct_answers += 1
+            progress.last_attempt = datetime.utcnow()
+            
+            # Update analytics
+            today = datetime.utcnow().date()
+            analytics = Analytics.query.filter_by(
+                user_id=session['user_id'],
+                session_date=today
+            ).first()
+            
+            if not analytics:
+                analytics = Analytics(
+                    user_id=session['user_id'],
+                    session_date=today,
+                    questions_attempted=0,
+                    correct_answers=0,
+                    average_response_time=0.0,
+                    session_duration=0
+                )
+                db.session.add(analytics)
+            
+            if analytics.questions_attempted is None:
+                analytics.questions_attempted = 0
+            if analytics.correct_answers is None:
+                analytics.correct_answers = 0
+            if analytics.average_response_time is None:
+                analytics.average_response_time = 0.0
+            if analytics.session_duration is None:
+                analytics.session_duration = 0
+            
+            analytics.questions_attempted += 1
+            if is_correct:
+                analytics.correct_answers += 1
+            
+            self.response_times.append(response_time)
+            analytics.average_response_time = sum(self.response_times) / len(self.response_times)
+            analytics.session_duration = (datetime.now() - self.session_start_time).seconds
+            
+            db.session.commit()
+        
         return is_correct
 
 trainer = MentalMathTrainer()
@@ -71,17 +146,71 @@ trainer = MentalMathTrainer()
 def menu():
     return render_template('menu.html')
 
-@app.route('/marathon')
-def marathon():
-    return render_template('marathon.html')
-
 @app.route('/dynamic')
 def dynamic():
+    if 'user_id' not in session:
+        return render_template('login.html')
     return render_template('dynamic.html')
 
 @app.route('/training')
 def training():
-    return render_template('training.html')
+    if 'user_id' not in session:
+        return render_template('login.html')
+    operation = request.args.get('operation', '+')
+    return render_template('training.html', operation=operation)
+
+@app.route('/marathon')
+def marathon():
+    if 'user_id' not in session:
+        return render_template('login.html')
+    return render_template('marathon.html')
+
+@app.route('/analytics')
+def analytics():
+    if 'user_id' not in session:
+        return render_template('login.html')
+    
+    user = User.query.get(session['user_id'])
+    progress_data = Progress.query.filter_by(user_id=user.id).all()
+    analytics_data = Analytics.query.filter_by(user_id=user.id).order_by(Analytics.session_date.desc()).limit(7).all()
+    
+    # Convert analytics_data to a list of dicts for JSON serialization
+    analytics_dicts = [
+        {
+            'session_date': a.session_date.strftime('%Y-%m-%d'),
+            'questions_attempted': a.questions_attempted,
+            'correct_answers': a.correct_answers,
+            'average_response_time': a.average_response_time,
+            'session_duration': a.session_duration,
+            'accuracy': a.accuracy
+        }
+        for a in analytics_data
+    ]
+    
+    return render_template('analytics.html', 
+                         progress=progress_data,
+                         analytics=analytics_dicts)
+
+@app.route('/learning-path')
+def learning_path():
+    if 'user_id' not in session:
+        return render_template('login.html')
+    
+    user = User.query.get(session['user_id'])
+    learning_paths = LearningPath.query.filter_by(user_id=user.id).all()
+    
+    # Generate new learning paths if none exist
+    if not learning_paths:
+        for operation in ['+', '-', '*', '/']:
+            path = LearningPath(
+                user_id=user.id,
+                operation=operation
+            )
+            db.session.add(path)
+        db.session.commit()
+        learning_paths = LearningPath.query.filter_by(user_id=user.id).all()
+    
+    return render_template('learning_path.html', paths=learning_paths)
 
 @app.route('/get_question', methods=['GET'])
 def get_question():
@@ -94,13 +223,44 @@ def check_answer():
     data = request.json
     user_answer = int(data['user_answer'])
     correct_answer = int(data['correct_answer'])
+    operation = data.get('operation', '+')
+    response_time = float(data.get('response_time', 0))
 
-    is_correct = trainer.check_answer(user_answer, correct_answer)
+    is_correct = trainer.check_answer(user_answer, correct_answer, operation, response_time)
 
     return jsonify({
         'is_correct': is_correct,
         'correct_answers': trainer.correct_answers,
     })
 
+@app.route('/register', methods=['POST'])
+def register():
+    data = request.json
+    username = data.get('username')
+    
+    if User.query.filter_by(username=username).first():
+        return jsonify({'error': 'Username already exists'}), 400
+    
+    user = User(username=username)
+    db.session.add(user)
+    db.session.commit()
+    
+    session['user_id'] = user.id
+    return jsonify({'message': 'Registration successful'})
+
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.json
+    username = data.get('username')
+    
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    
+    session['user_id'] = user.id
+    return jsonify({'message': 'Login successful'})
+
 if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
     app.run(debug=True)
