@@ -44,4 +44,14 @@ class LearningPath(db.Model):
     target_level = db.Column(db.Integer, default=5)
     completed = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    completed_at = db.Column(db.DateTime, nullable=True) 
+    completed_at = db.Column(db.DateTime, nullable=True)
+
+class LeaderboardScore(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    mode = db.Column(db.String(20), nullable=False)  # 'standard' or 'marathon'
+    score = db.Column(db.Integer, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationship
+    user = db.relationship('User', backref='leaderboard_scores') 

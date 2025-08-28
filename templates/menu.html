@@ -19,6 +19,93 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            position: relative;
+        }
+        .auth-widget {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+            padding: 16px;
+            min-width: 200px;
+            z-index: 10000;
+        }
+        .auth-widget.hidden {
+            display: none;
+        }
+        .auth-widget input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            box-sizing: border-box;
+            font-size: 16px;
+            background: white;
+            color: #333;
+            outline: none;
+        }
+        .auth-widget input:focus {
+            border-color: #1976d2;
+            box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+        }
+        .auth-widget button {
+            width: 100%;
+            padding: 10px 14px;
+            border: none;
+            border-radius: 4px;
+            background: #1976d2;
+            color: white;
+            cursor: pointer;
+            margin-bottom: 4px;
+            font-size: 16px;
+        }
+        .auth-widget button.secondary {
+            background: transparent;
+            color: #1976d2;
+            border: 1px solid #1976d2;
+        }
+        .auth-widget button:hover {
+            opacity: 0.9;
+        }
+        .auth-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #1976d2;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 12px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            z-index: 1001;
+        }
+        .auth-toggle:hover {
+            background: #1565c0;
+        }
+        .user-info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+            padding: 12px 16px;
+            font-size: 14px;
+            z-index: 1000;
+        }
+        .user-info .username {
+            font-weight: bold;
+            color: #1976d2;
+        }
+        .user-info .logout {
+            color: #666;
+            text-decoration: underline;
+            cursor: pointer;
+            margin-left: 8px;
         }
         .main-title {
             font-size: 3.5rem;
@@ -65,20 +152,207 @@
             color: #1565c0;
             border-color: #1565c0;
         }
+        .leaderboard-icon {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: white;
+            border-radius: 8px;
+            padding: 12px 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            z-index: 1000;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 500;
+            color: #1976d2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .leaderboard-icon:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+        .error-message {
+            color: #d32f2f;
+            font-size: 12px;
+            margin-top: 4px;
+            display: none;
+        }
         @media (max-width: 600px) {
             .main-title { font-size: 2rem; }
             .menu-button { font-size: 1.1rem; min-width: 180px; padding: 12px 16px; }
+            .auth-widget { right: 10px; left: 10px; min-width: auto; }
+            .auth-toggle { right: 10px; }
+            .user-info { right: 10px; }
+            .leaderboard-icon { left: 10px; }
         }
     </style>
 </head>
 <body>
+    <!-- Leaderboard Icon -->
+    <a href="/leaderboard" class="leaderboard-icon" title="Leaderboard">
+        Leaderboards
+    </a>
+
+    <!-- Auth Toggle Button (shown when not logged in) -->
+    <button class="auth-toggle" id="authToggle" onclick="toggleAuth()">Sign In</button>
+    
+    <!-- User Info (shown when logged in) -->
+    <div class="user-info" id="userInfo" style="display: none;">
+        Welcome, <span class="username" id="username"></span>
+        <span class="logout" onclick="logout()">Logout</span>
+    </div>
+    
+    <!-- Auth Widget -->
+    <div class="auth-widget hidden" id="authWidget">
+        <input type="text" id="authUsername" placeholder="Enter username">
+        <button onclick="login()">Login</button>
+        <button class="secondary" onclick="register()">Register</button>
+        <div class="error-message" id="authError"></div>
+    </div>
+
     <div class="main-title">QuickMath</div>
     <div class="menu-buttons">
-        <a href="/dynamic" class="menu-button">Dynamic Mode</a>
+        <a href="/dynamic" class="menu-button">Standard Mode</a>
         <a href="/training" class="menu-button">Training Mode</a>
         <a href="/marathon" class="menu-button">Marathon Mode</a>
-        <a href="/analytics" class="menu-button secondary">View Analytics</a>
-        <a href="/learning-path" class="menu-button secondary">Learning Path</a>
     </div>
+
+    <script>
+        // Check if user is logged in on page load
+        window.onload = function() {
+            checkAuthStatus();
+        };
+
+        function checkAuthStatus() {
+            fetch('/check-auth-status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.logged_in) {
+                        showUserInfo(data.username);
+                    } else {
+                        showAuthToggle();
+                    }
+                })
+                .catch(error => {
+                    showAuthToggle();
+                });
+        }
+
+        function showUserInfo(username) {
+            document.getElementById('authToggle').style.display = 'none';
+            document.getElementById('authWidget').classList.add('hidden');
+            document.getElementById('userInfo').style.display = 'block';
+            document.getElementById('username').textContent = username;
+        }
+
+        function showAuthToggle() {
+            document.getElementById('authToggle').style.display = 'block';
+            document.getElementById('authWidget').classList.add('hidden');
+            document.getElementById('userInfo').style.display = 'none';
+        }
+
+        function toggleAuth() {
+            const widget = document.getElementById('authWidget');
+            const toggle = document.getElementById('authToggle');
+            const input = document.getElementById('authUsername');
+            
+            console.log('Toggle auth clicked');
+            console.log('Widget hidden before:', widget.classList.contains('hidden'));
+            
+            widget.classList.toggle('hidden');
+            toggle.style.display = widget.classList.contains('hidden') ? 'block' : 'none';
+            
+            console.log('Widget hidden after:', widget.classList.contains('hidden'));
+            
+            // Focus on the input field when widget opens
+            if (!widget.classList.contains('hidden')) {
+                console.log('Focusing input field');
+                setTimeout(() => {
+                    input.focus();
+                    console.log('Input focused');
+                }, 100);
+            }
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('authError');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        function login() {
+            const username = document.getElementById('authUsername').value;
+            if (!username) {
+                showError('Please enter a username');
+                return;
+            }
+
+            fetch('/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showError(data.error);
+                } else {
+                    showUserInfo(username);
+                    document.getElementById('authWidget').classList.add('hidden');
+                }
+            })
+            .catch(error => {
+                showError('An error occurred. Please try again.');
+            });
+        }
+
+        function register() {
+            const username = document.getElementById('authUsername').value;
+            if (!username) {
+                showError('Please enter a username');
+                return;
+            }
+
+            fetch('/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showError(data.error);
+                } else {
+                    showUserInfo(username);
+                    document.getElementById('authWidget').classList.add('hidden');
+                }
+            })
+            .catch(error => {
+                showError('An error occurred. Please try again.');
+            });
+        }
+
+        function logout() {
+            fetch('/logout', {
+                method: 'POST',
+            })
+            .then(() => {
+                showAuthToggle();
+            })
+            .catch(error => {
+                console.error('Logout error:', error);
+            });
+        }
+    </script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, jsonify, session
 import random
 from datetime import datetime, timedelta
-from models import db, User, Progress, Analytics, LearningPath
+from models import db, User, Progress, Analytics, LearningPath, LeaderboardScore
 import json
 
 app = Flask(__name__)
@@ -74,7 +74,7 @@ class MentalMathTrainer:
         if is_correct:
             self.correct_answers += 1
         
-        # Update progress in database
+        # Update progress in database only if user is logged in
         if 'user_id' in session:
             progress = Progress.query.filter_by(
                 user_id=session['user_id'],
@@ -148,27 +148,21 @@ def menu():
 
 @app.route('/dynamic')
 def dynamic():
-    if 'user_id' not in session:
-        return render_template('login.html')
     return render_template('dynamic.html')
 
 @app.route('/training')
 def training():
-    if 'user_id' not in session:
-        return render_template('login.html')
     operation = request.args.get('operation', '+')
     return render_template('training.html', operation=operation)
 
 @app.route('/marathon')
 def marathon():
-    if 'user_id' not in session:
-        return render_template('login.html')
     return render_template('marathon.html')
 
 @app.route('/analytics')
 def analytics():
     if 'user_id' not in session:
-        return render_template('login.html')
+        return render_template('analytics.html', progress=[], analytics=[])
     
     user = User.query.get(session['user_id'])
     progress_data = Progress.query.filter_by(user_id=user.id).all()
@@ -194,7 +188,7 @@ def analytics():
 @app.route('/learning-path')
 def learning_path():
     if 'user_id' not in session:
-        return render_template('login.html')
+        return render_template('learning_path.html', paths=[])
     
     user = User.query.get(session['user_id'])
     learning_paths = LearningPath.query.filter_by(user_id=user.id).all()
@@ -259,6 +253,68 @@ def login():
     
     session['user_id'] = user.id
     return jsonify({'message': 'Login successful'})
+
+@app.route('/logout', methods=['POST'])
+def logout():
+    session.pop('user_id', None)
+    return jsonify({'message': 'Logout successful'})
+
+@app.route('/check-auth-status')
+def check_auth_status():
+    if 'user_id' in session:
+        user = User.query.get(session['user_id'])
+        if user:
+            return jsonify({'logged_in': True, 'username': user.username, 'user_id': user.id})
+    return jsonify({'logged_in': False})
+
+@app.route('/leaderboard')
+def leaderboard():
+    return render_template('leaderboard.html')
+
+@app.route('/api/leaderboard/<mode>')
+def get_leaderboard(mode):
+    if mode not in ['standard', 'marathon']:
+        return jsonify({'error': 'Invalid mode'}), 400
+    
+    # Get top scores for the mode
+    scores = LeaderboardScore.query.filter_by(mode=mode)\
+        .order_by(LeaderboardScore.score.desc())\
+        .limit(50)\
+        .all()
+    
+    entries = []
+    for i, score in enumerate(scores, 1):
+        entries.append({
+            'rank': i,
+            'user_id': score.user_id,
+            'username': score.user.username,
+            'score': score.score
+        })
+    
+    return jsonify({'entries': entries})
+
+@app.route('/api/submit-score', methods=['POST'])
+def submit_score():
+    if 'user_id' not in session:
+        return jsonify({'error': 'User not logged in'}), 401
+    
+    data = request.json
+    mode = data.get('mode')
+    score = data.get('score')
+    
+    if mode not in ['standard', 'marathon'] or not isinstance(score, int):
+        return jsonify({'error': 'Invalid data'}), 400
+    
+    # Save the score
+    leaderboard_score = LeaderboardScore(
+        user_id=session['user_id'],
+        mode=mode,
+        score=score
+    )
+    db.session.add(leaderboard_score)
+    db.session.commit()
+    
+    return jsonify({'message': 'Score submitted successfully'})
 
 if __name__ == '__main__':
     with app.app_context():
