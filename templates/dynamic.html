@@ -159,6 +159,12 @@
             answerLocked = true;
             const responseTime = (Date.now() - questionStartTime) / 1000;
             const operation = document.getElementById('question').textContent.split(' ')[1];
+            
+            // Update score immediately for better responsiveness
+            score++;
+            document.getElementById('score').textContent = score;
+            
+            // Send answer to server asynchronously (don't wait for response)
             fetch('/check_answer', {
                 method: 'POST',
                 headers: {
@@ -170,13 +176,13 @@
                     operation: operation,
                     response_time: responseTime
                 }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                score++;
-                document.getElementById('score').textContent = score;
-                getNewQuestion();
+            }).catch(error => {
+                // Silently handle errors to prevent UI lag
+                console.log('Answer submission error:', error);
             });
+            
+            // Get new question immediately
+            getNewQuestion();
         }
 
         document.getElementById('answer').addEventListener('input', function(e) {

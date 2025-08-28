@@ -14,6 +14,14 @@ else:
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///math_trainer.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# Add response headers for better performance
+@app.after_request
+def add_header(response):
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
+
 db.init_app(app)
 
 class QuestionGenerator:
@@ -79,69 +87,73 @@ class MentalMathTrainer:
         if is_correct:
             self.correct_answers += 1
         
-        # Update progress in database only if user is logged in
-        if 'user_id' in session:
-            progress = Progress.query.filter_by(
-                user_id=session['user_id'],
-                operation=operation
-            ).first()
-            
-            if not progress:
-                progress = Progress(
+        # Only update database if user is logged in and not on Vercel (to reduce latency)
+        if 'user_id' in session and not os.environ.get('VERCEL'):
+            try:
+                progress = Progress.query.filter_by(
                     user_id=session['user_id'],
-                    operation=operation,
-                    difficulty_level=1,
-                    total_attempts=0,
-                    correct_answers=0
-                )
-                db.session.add(progress)
-            
-            if progress.total_attempts is None:
-                progress.total_attempts = 0
-            if progress.correct_answers is None:
-                progress.correct_answers = 0
-            
-            progress.total_attempts += 1
-            if is_correct:
-                progress.correct_answers += 1
-            progress.last_attempt = datetime.utcnow()
-            
-            # Update analytics
-            today = datetime.utcnow().date()
-            analytics = Analytics.query.filter_by(
-                user_id=session['user_id'],
-                session_date=today
-            ).first()
-            
-            if not analytics:
-                analytics = Analytics(
+                    operation=operation
+                ).first()
+                
+                if not progress:
+                    progress = Progress(
+                        user_id=session['user_id'],
+                        operation=operation,
+                        difficulty_level=1,
+                        total_attempts=0,
+                        correct_answers=0
+                    )
+                    db.session.add(progress)
+                
+                if progress.total_attempts is None:
+                    progress.total_attempts = 0
+                if progress.correct_answers is None:
+                    progress.correct_answers = 0
+                
+                progress.total_attempts += 1
+                if is_correct:
+                    progress.correct_answers += 1
+                progress.last_attempt = datetime.utcnow()
+                
+                # Update analytics
+                today = datetime.utcnow().date()
+                analytics = Analytics.query.filter_by(
                     user_id=session['user_id'],
-                    session_date=today,
-                    questions_attempted=0,
-                    correct_answers=0,
-                    average_response_time=0.0,
-                    session_duration=0
-                )
-                db.session.add(analytics)
-            
-            if analytics.questions_attempted is None:
-                analytics.questions_attempted = 0
-            if analytics.correct_answers is None:
-                analytics.correct_answers = 0
-            if analytics.average_response_time is None:
-                analytics.average_response_time = 0.0
-            if analytics.session_duration is None:
-                analytics.session_duration = 0
-            
-            analytics.questions_attempted += 1
-            if is_correct:
-                analytics.correct_answers += 1
-            
-            self.response_times.append(response_time)
-            analytics.average_response_time = sum(self.response_times) / len(self.response_times)
-            analytics.session_duration = (datetime.now() - self.session_start_time).seconds
-            
-            db.session.commit()
+                    session_date=today
+                ).first()
+                
+                if not analytics:
+                    analytics = Analytics(
+                        user_id=session['user_id'],
+                        session_date=today,
+                        questions_attempted=0,
+                        correct_answers=0,
+                        average_response_time=0.0,
+                        session_duration=0
+                    )
+                    db.session.add(analytics)
+                
+                if analytics.questions_attempted is None:
+                    analytics.questions_attempted = 0
+                if analytics.correct_answers is None:
+                    analytics.correct_answers = 0
+                if analytics.average_response_time is None:
+                    analytics.average_response_time = 0.0
+                if analytics.session_duration is None:
+                    analytics.session_duration = 0
+                
+                analytics.questions_attempted += 1
+                if is_correct:
+                    analytics.correct_answers += 1
+                
+                self.response_times.append(response_time)
+                analytics.average_response_time = sum(self.response_times) / len(self.response_times)
+                analytics.session_duration = (datetime.now() - self.session_start_time).seconds
+                
+                db.session.commit()
+            except Exception as e:
+                # Silently fail on database errors to prevent UI lag
+                print(f"Database error: {e}")
         
         return is_correct
 
