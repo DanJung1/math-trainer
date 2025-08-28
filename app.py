@@ -1,12 +1,17 @@
 from flask import Flask, render_template, request, jsonify, session
 import random
+import os
 from datetime import datetime, timedelta
 from models import db, User, Progress, Analytics, LearningPath, LeaderboardScore
 import json
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here'  # Change this in production
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///math_trainer.db'
+# Use in-memory database for Vercel (serverless) or file-based for local development
+if os.environ.get('VERCEL'):
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+else:
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///math_trainer.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
@@ -145,6 +150,10 @@ trainer = MentalMathTrainer()
 @app.route('/')
 def menu():
     return render_template('menu.html')
+
+@app.route('/health')
+def health():
+    return jsonify({'status': 'healthy'})
 
 @app.route('/dynamic')
 def dynamic():
@@ -316,7 +325,11 @@ def submit_score():
     
     return jsonify({'message': 'Score submitted successfully'})
 
-if __name__ == '__main__':
+# Create database tables (only if not in production/vercel)
+import os
+if not os.environ.get('VERCEL'):
     with app.app_context():
         db.create_all()
+
+if __name__ == '__main__':
     app.run(debug=True)
