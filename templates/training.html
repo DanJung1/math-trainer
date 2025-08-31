@@ -100,6 +100,17 @@
             font-weight: 500;
             margin-left: 0.5rem;
         }
+        .config-info {
+            position: absolute;
+            top: 120px;
+            right: 48px;
+            background: #e3f2fd;
+            padding: 12px 20px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: #1976d2;
+            border: 1px solid #bbdefb;
+        }
         @media (max-width: 600px) {
             .top-bar { padding: 16px 12px 0 12px; font-size: 1.1rem; }
             .question-row { padding: 18px 0; margin-top: 70px; }
@@ -107,6 +118,7 @@
             #answer { font-size: 1.5rem; width: 90px; }
             .stats-bar { gap: 1rem; font-size: 1rem; }
             .stats-bar span { font-size: 1.1rem; }
+            .config-info { top: 70px; right: 12px; font-size: 0.8rem; padding: 8px 16px; }
         }
     </style>
 </head>
@@ -118,6 +130,11 @@
         <div></div>
         <div>Training</div>
     </div>
+    
+    <div class="config-info" id="configInfo">
+        <!-- Configuration info will be displayed here -->
+    </div>
+    
     <div class="center-area">
         <div class="question-row">
             <span class="question" id="question">Loading...</span>
@@ -134,11 +151,51 @@
         let questionStartTime;
         let totalQuestions = 0;
         let totalTime = 0;
-        const operation = '{{ operation }}';
+        let trainingConfig = null;
         let answerLocked = false;
 
+        // Check if training configuration exists
+        function checkTrainingConfig() {
+            const config = sessionStorage.getItem('trainingConfig');
+            if (!config) {
+                // Redirect to training configuration if none exists
+                window.location.href = '/training-config';
+                return;
+            }
+            
+            try {
+                trainingConfig = JSON.parse(config);
+                displayConfigInfo();
+            } catch (e) {
+                console.error('Invalid training configuration:', e);
+                window.location.href = '/training-config';
+            }
+        }
+
+        function displayConfigInfo() {
+            const operations = trainingConfig.operations.map(op => {
+                const opNames = { '+': 'Addition', '-': 'Subtraction', '*': 'Multiplication', '/': 'Division' };
+                return opNames[op] || op;
+            }).join(', ');
+            
+            const range = `${trainingConfig.minRange} - ${trainingConfig.maxRange}`;
+            document.getElementById('configInfo').innerHTML = `
+                <strong>Operations:</strong> ${operations}<br>
+                <strong>Input Range:</strong> ${range}
+            `;
+        }
+
         function getNewQuestion() {
-            fetch('/get_question?mode=training&operation=' + operation)
+            if (!trainingConfig) return;
+            
+            const params = new URLSearchParams({
+                mode: 'training',
+                operations: trainingConfig.operations.join(','),
+                min_range: trainingConfig.minRange,
+                max_range: trainingConfig.maxRange
+            });
+            
+            fetch('/get_question?' + params.toString())
                 .then(response => response.json())
                 .then(data => {
                     document.getElementById('question').textContent = data.question + ' =';
@@ -165,6 +222,11 @@
             if (parseInt(userAnswer) !== currentAnswer) return;
             answerLocked = true;
             const responseTime = (Date.now() - questionStartTime) / 1000;
+            
+            // Determine the operation from the current question
+            const questionText = document.getElementById('question').textContent;
+            const operation = questionText.match(/[\+\-\*\/]/)?.[0] || '+';
+            
             fetch('/check_answer', {
                 method: 'POST',
                 headers: {
@@ -195,6 +257,7 @@
 
         // Start the game
         startTime = Date.now();
+        checkTrainingConfig();
         getNewQuestion();
         setInterval(updateTimer, 1000);
     </script>

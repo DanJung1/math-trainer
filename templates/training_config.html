@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Trainer - Training Configuration</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background: #fff;
+            color: #111;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .top-bar {
+            width: 100vw;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: absolute;
+            top: 0;
+            left: 0;
+            padding: 32px 48px 0 48px;
+            box-sizing: border-box;
+            font-size: 1.5rem;
+            font-weight: 300;
+            color: #888;
+            letter-spacing: 1px;
+        }
+        .center-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100vw;
+            height: 100vh;
+            padding-top: 120px;
+        }
+        .config-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            padding: 48px;
+            max-width: 500px;
+            width: 90%;
+        }
+        .config-title {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #1976d2;
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .config-section {
+            margin-bottom: 32px;
+        }
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 16px;
+        }
+        .operations-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+        .operation-checkbox {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .operation-checkbox:hover {
+            border-color: #1976d2;
+            background: #f5faff;
+        }
+        .operation-checkbox.selected {
+            border-color: #1976d2;
+            background: #e3f2fd;
+        }
+        .operation-checkbox input[type="checkbox"] {
+            margin-right: 12px;
+            transform: scale(1.2);
+        }
+        .operation-checkbox label {
+            cursor: pointer;
+            font-weight: 500;
+            color: #333;
+        }
+        .range-inputs {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 16px;
+            align-items: center;
+        }
+        .range-inputs input[type="number"] {
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .range-inputs input[type="number"]:focus {
+            border-color: #1976d2;
+        }
+        .range-separator {
+            font-size: 1.2rem;
+            color: #666;
+            text-align: center;
+        }
+        .start-button {
+            width: 100%;
+            padding: 16px 32px;
+            background: #1976d2;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .start-button:hover {
+            background: #1565c0;
+        }
+        .start-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #d32f2f;
+            text-align: center;
+            margin-top: 16px;
+            font-size: 0.9rem;
+        }
+        @media (max-width: 600px) {
+            .top-bar { padding: 16px 12px 0 12px; font-size: 1.1rem; }
+            .config-container { padding: 24px; margin: 16px; }
+            .config-title { font-size: 1.5rem; }
+            .operations-grid { grid-template-columns: 1fr; }
+            .range-inputs { grid-template-columns: 1fr; }
+            .range-separator { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <a href="/" style="text-decoration:none;color:inherit;display:flex;align-items:center;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none" viewBox="0 0 24 24"><path fill="#888" d="M3 11.5V21h6v-5h6v5h6v-9.5l-9-7-9 7Z"/></svg>
+        </a>
+        <div></div>
+        <div>Training</div>
+    </div>
+    <div class="center-area">
+        <div class="config-container">
+            <h1 class="config-title">Training Configuration</h1>
+            
+            <div class="config-section">
+                <h2 class="section-title">Select Operations</h2>
+                <div class="operations-grid">
+                    <div class="operation-checkbox" onclick="toggleOperation(this, 'addition')">
+                        <input type="checkbox" id="addition" name="operations" value="+" checked>
+                        <label for="addition">Addition (+)</label>
+                    </div>
+                    <div class="operation-checkbox" onclick="toggleOperation(this, 'subtraction')">
+                        <input type="checkbox" id="subtraction" name="operations" value="-">
+                        <label for="subtraction">Subtraction (-)</label>
+                    </div>
+                    <div class="operation-checkbox" onclick="toggleOperation(this, 'multiplication')">
+                        <input type="checkbox" id="multiplication" name="operations" value="*">
+                        <label for="multiplication">Multiplication (×)</label>
+                    </div>
+                    <div class="operation-checkbox" onclick="toggleOperation(this, 'division')">
+                        <input type="checkbox" id="division" name="operations" value="/">
+                        <label for="division">Division (÷)</label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="config-section">
+                <h2 class="section-title">Input Number Range</h2>
+                <p style="color: #666; font-size: 0.9rem; margin-bottom: 16px; text-align: center;">
+                    Specify the range for the numbers in each problem (not the answer)
+                </p>
+                <div class="range-inputs">
+                    <input type="number" id="minRange" placeholder="Min" value="1" min="1">
+                    <div class="range-separator">to</div>
+                    <input type="number" id="maxRange" placeholder="Max" value="100" min="1">
+                </div>
+            </div>
+            
+            <button class="start-button" onclick="startTraining()">Start Training</button>
+            <div class="error-message" id="errorMessage"></div>
+        </div>
+    </div>
+
+    <script>
+        function toggleOperation(element, operationId) {
+            const checkbox = document.getElementById(operationId);
+            checkbox.checked = !checkbox.checked;
+            
+            if (checkbox.checked) {
+                element.classList.add('selected');
+            } else {
+                element.classList.remove('selected');
+            }
+        }
+
+        function startTraining() {
+            const selectedOperations = [];
+            document.querySelectorAll('input[name="operations"]:checked').forEach(checkbox => {
+                selectedOperations.push(checkbox.value);
+            });
+            
+            const minRange = parseInt(document.getElementById('minRange').value);
+            const maxRange = parseInt(document.getElementById('maxRange').value);
+            
+            // Validation
+            if (selectedOperations.length === 0) {
+                showError('Please select at least one operation.');
+                return;
+            }
+            
+            if (isNaN(minRange) || isNaN(maxRange)) {
+                showError('Please enter valid number ranges.');
+                return;
+            }
+            
+            if (minRange >= maxRange) {
+                showError('Minimum range must be less than maximum range.');
+                return;
+            }
+            
+            if (minRange < 1) {
+                showError('Minimum range must be at least 1.');
+                return;
+            }
+            
+            // Store configuration in sessionStorage and redirect
+            const config = {
+                operations: selectedOperations,
+                minRange: minRange,
+                maxRange: maxRange
+            };
+            sessionStorage.setItem('trainingConfig', JSON.stringify(config));
+            
+            // Redirect to training with configuration
+            window.location.href = '/training';
+        }
+
+        function showError(message) {
+            const errorElement = document.getElementById('errorMessage');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+            
+            setTimeout(() => {
+                errorElement.style.display = 'none';
+            }, 3000);
+        }
+
+        // Initialize selected operations styling
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('input[name="operations"]:checked').forEach(checkbox => {
+                const operationId = checkbox.id;
+                const element = document.querySelector(`[onclick*="${operationId}"]`);
+                if (element) {
+                    element.classList.add('selected');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

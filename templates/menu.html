@@ -16,10 +16,157 @@
         body {
             min-height: 100vh;
             display: flex;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 300px;
+            height: 100vh;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .sidebar.open {
+            transform: translateX(0);
+        }
+        
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .sidebar-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1976d2;
+        }
+        
+        .close-sidebar {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .sidebar-content {
+            padding: 20px;
+        }
+        
+        .sidebar-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .sidebar-tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+            font-size: 14px;
+            border-bottom: 2px solid transparent;
+        }
+        
+        .sidebar-tab.active {
+            color: #1976d2;
+            border-bottom-color: #1976d2;
+        }
+        
+        .leaderboard-entry {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .leaderboard-entry:last-child {
+            border-bottom: none;
+        }
+        
+        .entry-rank {
+            font-weight: bold;
+            color: #1976d2;
+            min-width: 30px;
+        }
+        
+        .entry-user {
+            flex: 1;
+            margin: 0 10px;
+            font-size: 14px;
+        }
+        
+        .entry-score {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .leaderboard-entry.current-user {
+            background: #e3f2fd;
+            border-radius: 4px;
+            padding: 8px 4px;
+            margin: 0 -4px;
+        }
+        
+        .share-leaderboard {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        
+        .share-leaderboard-btn {
+            width: 100%;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+        
+        .share-leaderboard-btn:hover {
+            background: #45a049;
+        }
+        
+        .main-content {
+            flex: 1;
+            display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            position: relative;
+            min-height: 100vh;
+            transition: margin-left 0.3s ease;
+        }
+        
+        .main-content.shifted {
+            margin-left: 300px;
         }
         .auth-widget {
             position: absolute;
@@ -30,7 +177,9 @@
             box-shadow: 0 2px 12px rgba(0,0,0,0.1);
             padding: 16px;
             min-width: 200px;
+            max-width: 300px;
             z-index: 10000;
+            box-sizing: border-box;
         }
         .auth-widget.hidden {
             display: none;
@@ -61,6 +210,7 @@
             cursor: pointer;
             margin-bottom: 4px;
             font-size: 16px;
+            box-sizing: border-box;
         }
         .auth-widget button.secondary {
             background: transparent;
@@ -106,6 +256,25 @@
             text-decoration: underline;
             cursor: pointer;
             margin-left: 8px;
+        }
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .profile-picture {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .user-details {
+            display: flex;
+            flex-direction: column;
+        }
+        .user-email {
+            font-size: 12px;
+            color: #666;
         }
         .main-title {
             font-size: 3.5rem;
@@ -156,23 +325,49 @@
             position: absolute;
             top: 20px;
             left: 20px;
-            background: white;
+            background: #1976d2;
+            border: none;
             border-radius: 8px;
             padding: 12px 20px;
             box-shadow: 0 2px 12px rgba(0,0,0,0.1);
             transition: transform 0.2s, box-shadow 0.2s;
-            z-index: 1000;
+            z-index: 1001;
             text-decoration: none;
             font-size: 16px;
             font-weight: 500;
-            color: #1976d2;
+            color: white;
             display: flex;
             align-items: center;
             justify-content: center;
+            cursor: pointer;
+            outline: none;
         }
         .leaderboard-icon:hover {
-            transform: scale(1.1);
+            transform: scale(1.05);
             box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            background: #1565c0;
+        }
+        .google-signin-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 10px 14px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            color: #333;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            box-sizing: border-box;
+        }
+        .google-signin-btn:hover {
+            background: #f8f9fa;
+            border-color: #ccc;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         .error-message {
             color: #d32f2f;
@@ -180,10 +375,100 @@
             margin-top: 4px;
             display: none;
         }
+        .loading {
+            text-align: center;
+            color: #666;
+            padding: 20px;
+            font-style: italic;
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+        
+        .modal-content h3 {
+            margin: 0 0 15px 0;
+            color: #1976d2;
+            font-size: 1.5rem;
+        }
+        
+        .modal-content p {
+            margin: 0 0 20px 0;
+            color: #666;
+            line-height: 1.5;
+        }
+        
+        .modal-content input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+        }
+        
+        .modal-content input:focus {
+            border-color: #1976d2;
+            outline: none;
+        }
+        
+        .modal-buttons button {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        
+        .modal-buttons button:hover {
+            background: #1565c0;
+        }
+        
         @media (max-width: 600px) {
+            .sidebar {
+                width: 100%;
+            }
+            .main-content.shifted {
+                margin-left: 0;
+            }
             .main-title { font-size: 2rem; }
             .menu-button { font-size: 1.1rem; min-width: 180px; padding: 12px 16px; }
-            .auth-widget { right: 10px; left: 10px; min-width: auto; }
+            .auth-widget { 
+                right: 10px; 
+                left: 10px; 
+                min-width: auto; 
+                max-width: calc(100vw - 20px);
+                box-sizing: border-box;
+                padding: 12px;
+            }
+            .auth-widget input,
+            .auth-widget button,
+            .google-signin-btn {
+                font-size: 14px;
+                padding: 8px 12px;
+            }
             .auth-toggle { right: 10px; }
             .user-info { right: 10px; }
             .leaderboard-icon { left: 10px; }
@@ -191,47 +476,256 @@
     </style>
 </head>
 <body>
-    <!-- Leaderboard Icon -->
-    <a href="/leaderboard" class="leaderboard-icon" title="Leaderboard">
-        Leaderboards
-    </a>
-
-    <!-- Auth Toggle Button (shown when not logged in) -->
-    <button class="auth-toggle" id="authToggle" onclick="toggleAuth()">Sign In</button>
-    
-    <!-- User Info (shown when logged in) -->
-    <div class="user-info" id="userInfo" style="display: none;">
-        Welcome, <span class="username" id="username"></span>
-        <span class="logout" onclick="logout()">Logout</span>
-    </div>
-    
-    <!-- Auth Widget -->
-    <div class="auth-widget hidden" id="authWidget">
-        <input type="text" id="authUsername" placeholder="Enter username">
-        <button onclick="login()">Login</button>
-        <button class="secondary" onclick="register()">Register</button>
-        <div class="error-message" id="authError"></div>
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-title">🏆 Leaderboards</div>
+            <button class="close-sidebar" onclick="closeSidebar()">×</button>
+        </div>
+        <div class="sidebar-content">
+            <div class="sidebar-tabs">
+                <button class="sidebar-tab active" onclick="switchLeaderboardTab('standard')">Standard</button>
+                <button class="sidebar-tab" onclick="switchLeaderboardTab('marathon')">Marathon</button>
+            </div>
+            <div id="standard-leaderboard" class="leaderboard-content">
+                <div class="loading">Loading...</div>
+            </div>
+            <div id="marathon-leaderboard" class="leaderboard-content" style="display: none;">
+                <div class="loading">Loading...</div>
+            </div>
+        </div>
     </div>
 
-    <div class="main-title">QuickMath</div>
-    <div class="menu-buttons">
-        <a href="/dynamic" class="menu-button">Standard Mode</a>
-        <a href="/training" class="menu-button">Training Mode</a>
-        <a href="/marathon" class="menu-button">Marathon Mode</a>
-    </div>
+    <!-- Main Content -->
+            <!-- Username Selection Modal -->
+        <div id="usernameModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <h3>Choose Your Username</h3>
+                <p>Welcome! Please choose a username that will be displayed on the leaderboard:</p>
+                <input type="text" id="newUsername" placeholder="Enter username" maxlength="20">
+                <div class="modal-buttons">
+                    <button onclick="saveUsername()">Save Username</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content" id="mainContent">
+            <!-- Leaderboard Icon -->
+            <button class="leaderboard-icon" onclick="openSidebar()" title="Leaderboard">
+                Leaderboards
+            </button>
+
+            <!-- Auth Toggle Button (shown when not logged in) -->
+            <button class="auth-toggle" id="authToggle" onclick="toggleAuth()">Sign In</button>
+            
+            <!-- User Info (shown when logged in) -->
+            <div class="user-info" id="userInfo" style="display: none;">
+                <div class="user-profile">
+                    <img id="profile-picture" class="profile-picture" src="" alt="Profile" style="display: none;">
+                    <div class="user-details">
+                        <div class="username" id="username"></div>
+                        <div class="user-email" id="user-email" style="display: none;"></div>
+                    </div>
+                </div>
+                <span class="logout" onclick="logout()">Logout</span>
+            </div>
+            
+            <!-- Auth Widget -->
+            <div class="auth-widget hidden" id="authWidget">
+                <input type="text" id="authUsername" placeholder="Enter username">
+                <button onclick="login()">Login</button>
+                <button class="secondary" onclick="register()">Register</button>
+                <div style="margin: 10px 0; text-align: center; color: #666;">- or -</div>
+                <a href="/google-login" class="google-signin-btn">
+                    <svg width="18" height="18" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    Sign in with Google
+                </a>
+                <div class="error-message" id="authError"></div>
+            </div>
+
+            <div class="main-title">QuickMath</div>
+            <div class="menu-buttons">
+                <a href="/dynamic" class="menu-button">Standard Mode</a>
+                <a href="/training-config" class="menu-button">Training Mode</a>
+                <a href="/marathon" class="menu-button">Marathon Mode</a>
+                <a href="/duel" class="menu-button">⚔️ Duel Mode</a>
+            </div>
+        </div>
 
     <script>
+        let currentLeaderboardTab = 'standard';
+        
         // Check if user is logged in on page load
         window.onload = function() {
             checkAuthStatus();
+            loadLeaderboard('standard');
         };
+        
+        function openSidebar() {
+            document.getElementById('sidebar').classList.add('open');
+            document.getElementById('mainContent').classList.add('shifted');
+            // Hide the leaderboard button when sidebar is open
+            document.querySelector('.leaderboard-icon').style.display = 'none';
+        }
+        
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('mainContent').classList.remove('shifted');
+            // Show the leaderboard button when sidebar is closed
+            document.querySelector('.leaderboard-icon').style.display = 'flex';
+        }
+        
+        function switchLeaderboardTab(mode) {
+            currentLeaderboardTab = mode;
+            
+            // Update tab styling
+            document.querySelectorAll('.sidebar-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Show/hide leaderboards
+            document.getElementById('standard-leaderboard').style.display = mode === 'standard' ? 'block' : 'none';
+            document.getElementById('marathon-leaderboard').style.display = mode === 'marathon' ? 'block' : 'none';
+            
+            // Load data
+            loadLeaderboard(mode);
+        }
+        
+        function loadLeaderboard(mode) {
+            const leaderboardContainer = document.getElementById(mode + '-leaderboard');
+            leaderboardContainer.innerHTML = '<div class="loading">Loading...</div>';
+            
+            fetch(`/api/leaderboard/${mode}`)
+                .then(response => response.json())
+                .then(data => {
+                    displayLeaderboard(mode, data);
+                })
+                .catch(error => {
+                    console.error('Failed to load leaderboard:', error);
+                    leaderboardContainer.innerHTML = '<div class="loading">Failed to load leaderboard</div>';
+                });
+        }
+        
+        function displayLeaderboard(mode, data) {
+            const leaderboardContainer = document.getElementById(mode + '-leaderboard');
+            
+            if (!data.entries || data.entries.length === 0) {
+                leaderboardContainer.innerHTML = '<div class="loading">No scores yet!</div>';
+                return;
+            }
+            
+            let html = '';
+            data.entries.forEach((entry, index) => {
+                const isCurrentUser = entry.user_id === data.current_user_id;
+                const userClass = isCurrentUser ? 'current-user' : '';
+                html += `
+                    <div class="leaderboard-entry ${userClass}">
+                        <div class="entry-rank">${entry.rank}</div>
+                        <div class="entry-user">${entry.username}</div>
+                        <div class="entry-score">${entry.score}</div>
+                    </div>
+                `;
+            });
+            
+            // Add share button if user has a score
+            const userEntry = data.entries.find(entry => entry.user_id === data.current_user_id);
+            if (userEntry) {
+                html += `
+                    <div class="share-leaderboard">
+                        <button onclick="shareLeaderboardPosition('${mode}', ${userEntry.rank}, ${userEntry.score})" class="share-leaderboard-btn">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/>
+                            </svg>
+                            Share My Rank
+                        </button>
+                    </div>
+                `;
+            }
+            
+            leaderboardContainer.innerHTML = html;
+        }
+        
+        function shareLeaderboardPosition(mode, rank, score) {
+            const gameUrl = window.location.origin;
+            const modeName = mode === 'standard' ? 'Standard Mode' : 'Marathon Mode';
+            
+            let snarkyComment = '';
+            if (rank === 1) {
+                snarkyComment = "👑 I'm the QuickMath champion! Bow down to my mathematical prowess!";
+            } else if (rank <= 3) {
+                snarkyComment = "🏆 Top 3 baby! My brain is clearly superior!";
+            } else if (rank <= 10) {
+                snarkyComment = "💪 Top 10! I'm in the elite math club!";
+            } else if (rank <= 25) {
+                snarkyComment = "😎 Top 25! Not bad for a math enthusiast!";
+            } else {
+                snarkyComment = "🤔 I'm on the leaderboard! That's an achievement, right?";
+            }
+            
+            const shareText = `📊 QuickMath Leaderboard: I'm ranked #${rank} in ${modeName} with ${score} points! ${snarkyComment}\n\nCan you beat my rank? ${gameUrl}`;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: 'QuickMath Leaderboard Challenge',
+                    text: shareText,
+                    url: gameUrl
+                }).catch(err => {
+                    copyToClipboard(shareText);
+                });
+            } else {
+                copyToClipboard(shareText);
+            }
+        }
+        
+        function copyToClipboard(text) {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(() => {
+                    alert('Share text copied to clipboard!');
+                }).catch(() => {
+                    fallbackCopyToClipboard(text);
+                });
+            } else {
+                fallbackCopyToClipboard(text);
+            }
+        }
+        
+        function fallbackCopyToClipboard(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                alert('Share text copied to clipboard!');
+            } catch (err) {
+                console.error('Failed to copy: ', err);
+                alert('Share text copied to clipboard!');
+            }
+            
+            document.body.removeChild(textArea);
+        }
 
         function checkAuthStatus() {
             fetch('/check-auth-status')
                 .then(response => response.json())
                 .then(data => {
                     if (data.logged_in) {
-                        showUserInfo(data.username);
+                        showUserInfo(data);
+                        // Check if user needs to set username
+                        if (data.needs_username) {
+                            showUsernameModal();
+                        }
                     } else {
                         showAuthToggle();
                     }
@@ -240,12 +734,62 @@
                     showAuthToggle();
                 });
         }
+        
+        function showUsernameModal() {
+            document.getElementById('usernameModal').style.display = 'flex';
+            document.getElementById('newUsername').focus();
+        }
+        
+        function saveUsername() {
+            const username = document.getElementById('newUsername').value.trim();
+            if (!username) {
+                alert('Please enter a username');
+                return;
+            }
+            
+            fetch('/api/update-username', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username: username })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('usernameModal').style.display = 'none';
+                    document.getElementById('username').textContent = username;
+                    // Reload auth status to update the display
+                    checkAuthStatus();
+                } else {
+                    alert(data.error || 'Failed to update username');
+                }
+            })
+            .catch(error => {
+                console.error('Error updating username:', error);
+                alert('Failed to update username');
+            });
+        }
 
-        function showUserInfo(username) {
+        function showUserInfo(userData) {
             document.getElementById('authToggle').style.display = 'none';
             document.getElementById('authWidget').classList.add('hidden');
             document.getElementById('userInfo').style.display = 'block';
-            document.getElementById('username').textContent = username;
+            document.getElementById('username').textContent = userData.username;
+            
+            // Show profile picture if available
+            if (userData.profile_picture) {
+                const profilePic = document.getElementById('profile-picture');
+                profilePic.src = userData.profile_picture;
+                profilePic.style.display = 'block';
+            }
+            
+            // Show email if available
+            if (userData.email) {
+                const userEmail = document.getElementById('user-email');
+                userEmail.textContent = userData.email;
+                userEmail.style.display = 'block';
+            }
         }
 
         function showAuthToggle() {

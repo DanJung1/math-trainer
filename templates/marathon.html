@@ -133,10 +133,17 @@
         </div>
     </div>
     <div id="game-over-modal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(255,255,255,0.96);z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-        <div style="font-size:2.5rem;font-weight:500;margin-bottom:1.5rem;color:#222;">Time's up!</div>
-        <div style="font-size:2rem;margin-bottom:2rem;color:#1976d2;">Final Score: <span id="final-score">0</span></div>
-        <div style="display:flex;gap:1.5rem;">
+        <div style="font-size:2.5rem;font-weight:500;margin-bottom:1.5rem;color:#222;">Game Over!</div>
+        <div style="font-size:2rem;margin-bottom:1rem;color:#1976d2;">Final Score: <span id="final-score">0</span></div>
+        <div style="font-size:1.5rem;margin-bottom:2rem;color:#666;">Best Score: <span id="best-score">0</span></div>
+        <div style="display:flex;gap:1.5rem;flex-wrap:wrap;justify-content:center;">
             <button id="play-again-btn" style="font-size:1.2rem;padding:0.7em 2em;border:none;border-radius:4px;background:#1976d2;color:#fff;cursor:pointer;transition:background 0.2s;">Play Again</button>
+            <button id="share-btn" style="font-size:1.2rem;padding:0.7em 2em;border:none;border-radius:4px;background:#4CAF50;color:#fff;cursor:pointer;transition:background 0.2s;display:flex;align-items:center;gap:0.5rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/>
+                </svg>
+                Share Score
+            </button>
             <a href="/" style="font-size:1.2rem;padding:0.7em 2em;border:none;border-radius:4px;background:#eee;color:#1976d2;text-decoration:none;display:inline-block;transition:background 0.2s;">Home</a>
         </div>
     </div>
@@ -215,6 +222,27 @@
                 bestScore = score;
                 document.getElementById('best-score').textContent = bestScore;
             }
+            
+            // Submit score to leaderboard
+            submitScoreToLeaderboard(score);
+        }
+        
+        function submitScoreToLeaderboard(score) {
+            fetch('/api/submit-score', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    mode: 'marathon',
+                    score: score
+                }),
+            }).then(response => response.json())
+            .then(data => {
+                console.log('Score submitted:', data);
+            }).catch(error => {
+                console.log('Score submission error:', error);
+            });
         }
 
         function getNewQuestion() {
@@ -282,6 +310,93 @@
         document.getElementById('play-again-btn').onclick = function() {
             startNewGame();
         };
+
+        document.getElementById('share-btn').onclick = function() {
+            shareScore();
+        };
+
+        function shareScore() {
+            const score = document.getElementById('final-score').textContent;
+            const gameUrl = window.location.origin;
+            
+            // Generate snarky comments based on score for marathon mode
+            let snarkyComment = '';
+            const scoreNum = parseInt(score);
+            
+            if (scoreNum >= 40) {
+                snarkyComment = "🚀 I'm a marathon math champion! My brain is unstoppable!";
+            } else if (scoreNum >= 25) {
+                snarkyComment = "💪 Marathon mode conquered! My neurons are on fire!";
+            } else if (scoreNum >= 15) {
+                snarkyComment = "😤 I survived the math marathon! Barely...";
+            } else if (scoreNum >= 8) {
+                snarkyComment = "😅 At least I finished the marathon! That's something, right?";
+            } else {
+                snarkyComment = "😭 My brain needs a vacation after that marathon...";
+            }
+            
+            const shareText = `🏃‍♂️ QuickMath Marathon: I scored ${score} points in the ultimate math challenge! ${snarkyComment}\n\nThink you can handle the marathon? ${gameUrl}`;
+            
+            // Try to use native sharing if available (mobile)
+            if (navigator.share) {
+                navigator.share({
+                    title: 'QuickMath Marathon Challenge',
+                    text: shareText,
+                    url: gameUrl
+                }).catch(err => {
+                    // Fallback to clipboard
+                    copyToClipboard(shareText);
+                });
+            } else {
+                // Fallback to clipboard
+                copyToClipboard(shareText);
+            }
+        }
+        
+        function copyToClipboard(text) {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showShareSuccess();
+                }).catch(() => {
+                    fallbackCopyToClipboard(text);
+                });
+            } else {
+                fallbackCopyToClipboard(text);
+            }
+        }
+        
+        function fallbackCopyToClipboard(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                showShareSuccess();
+            } catch (err) {
+                console.error('Failed to copy: ', err);
+                alert('Share text copied to clipboard!');
+            }
+            
+            document.body.removeChild(textArea);
+        }
+        
+        function showShareSuccess() {
+            const shareBtn = document.getElementById('share-btn');
+            const originalText = shareBtn.innerHTML;
+            shareBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Copied!';
+            shareBtn.style.background = '#4CAF50';
+            
+            setTimeout(() => {
+                shareBtn.innerHTML = originalText;
+                shareBtn.style.background = '#4CAF50';
+            }, 2000);
+        }
 
         // Start the game
         startNewGame();

@@ -21,4 +21,16 @@ ehthumbs.db
 Thumbs.db
 
 # Project specific
-*.log 
+*.log
+
+# Security - NEVER commit these files
+client_secret.json
+*.env
+.env
+instance/
+*.db
+*.sqlite
+*.sqlite3
+
+# Backup files
+backup_*.db 
