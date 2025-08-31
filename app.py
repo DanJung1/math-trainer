@@ -543,7 +543,8 @@ def handle_submit_answer(data):
         duel_data = duel_manager.active_duels.get(room_id)
         if duel_data and duel_data['status'] == 'active':
             # End round after a short delay to show results
-            socketio.sleep(2)
+            import time
+            time.sleep(2)
             round_result = duel_manager.end_round(room_id)
             if round_result:
                 if round_result.get('status') == 'completed':
@@ -946,6 +947,15 @@ import os
 if not os.environ.get('VERCEL') and not os.environ.get('RENDER'):
     with app.app_context():
         db.create_all()
+
+# Initialize database for Render deployment
+if os.environ.get('RENDER'):
+    with app.app_context():
+        try:
+            db.create_all()
+            print("Database tables created successfully on Render")
+        except Exception as e:
+            print(f"Database initialization error on Render: {e}")
 
 if __name__ == '__main__':
     socketio.run(app, debug=True, host='localhost', port=5001)
