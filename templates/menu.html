@@ -310,6 +310,43 @@
             transform: translateY(-2px) scale(1.03);
             box-shadow: 0 6px 24px #c7e0fc;
         }
+        
+        /* Different colors for each game mode */
+        .menu-button.standard {
+            background: linear-gradient(90deg, #4CAF50, #2E7D32);
+            box-shadow: 0 2px 12px rgba(76, 175, 80, 0.3);
+        }
+        .menu-button.standard:hover {
+            background: linear-gradient(90deg, #2E7D32, #4CAF50);
+            box-shadow: 0 6px 24px rgba(76, 175, 80, 0.4);
+        }
+        
+        .menu-button.training {
+            background: linear-gradient(90deg, #FF9800, #F57C00);
+            box-shadow: 0 2px 12px rgba(255, 152, 0, 0.3);
+        }
+        .menu-button.training:hover {
+            background: linear-gradient(90deg, #F57C00, #FF9800);
+            box-shadow: 0 6px 24px rgba(255, 152, 0, 0.4);
+        }
+        
+        .menu-button.marathon {
+            background: linear-gradient(90deg, #9C27B0, #7B1FA2);
+            box-shadow: 0 2px 12px rgba(156, 39, 176, 0.3);
+        }
+        .menu-button.marathon:hover {
+            background: linear-gradient(90deg, #7B1FA2, #9C27B0);
+            box-shadow: 0 6px 24px rgba(156, 39, 176, 0.4);
+        }
+        
+        .menu-button.duel {
+            background: linear-gradient(90deg, #F44336, #D32F2F);
+            box-shadow: 0 2px 12px rgba(244, 67, 54, 0.3);
+        }
+        .menu-button.duel:hover {
+            background: linear-gradient(90deg, #D32F2F, #F44336);
+            box-shadow: 0 6px 24px rgba(244, 67, 54, 0.4);
+        }
         .menu-button.secondary {
             background: #fff;
             color: #1976d2;
@@ -550,10 +587,10 @@
 
             <div class="main-title">QuickMath</div>
             <div class="menu-buttons">
-                <a href="/dynamic" class="menu-button">Standard Mode</a>
-                <a href="/training-config" class="menu-button">Training Mode</a>
-                <a href="/marathon" class="menu-button">Marathon Mode</a>
-                <a href="/duel" class="menu-button">⚔️ Duel Mode</a>
+                <a href="/dynamic" class="menu-button standard">Standard Mode</a>
+                <a href="/training-config" class="menu-button training">Training Mode</a>
+                <a href="/marathon" class="menu-button marathon">Marathon Mode</a>
+                <a href="/duel" class="menu-button duel">Duel Mode</a>
             </div>
         </div>
 
