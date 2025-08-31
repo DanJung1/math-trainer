@@ -23,6 +23,10 @@ app.config.from_object(config[config_name])
 # Apply configuration
 config[config_name].init_app(app)
 
+# Allow OAuth over HTTP for local development
+if app.config.get('DEBUG', False):
+    os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+
 # Initialize SocketIO for WebSocket support
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
 
